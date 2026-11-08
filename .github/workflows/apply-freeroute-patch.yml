@@ -1,0 +1,44 @@
+name: Apply FreeRoute source patch
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Apply source files
+        run: |
+          set -euo pipefail
+          test -f FreeRoute-Patched-Files.zip
+          unzip -o FreeRoute-Patched-Files.zip -d .
+          rm FreeRoute-Patched-Files.zip
+
+      - name: Commit patched files
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/java/io/nekohasekai/sfa/freeroute/FreeRouteCatalog.kt
+          git add app/src/main/java/io/nekohasekai/sfa/compose/screen/dashboard/FreeRoutePanel.kt
+          git add app/src/main/java/io/nekohasekai/sfa/compose/screen/dashboard/DashboardScreen.kt
+          git add app/src/main/java/io/nekohasekai/sfa/compose/navigation/ProfileRoutes.kt
+          git add app/src/main/java/io/nekohasekai/sfa/compose/navigation/Navigation.kt
+          git add app/src/main/java/io/nekohasekai/sfa/compose/screen/configuration/NewProfileScreen.kt
+          git add app/src/main/java/io/nekohasekai/sfa/compose/screen/configuration/NewProfileViewModel.kt
+          git add README-FA.txt
+          if git diff --cached --quiet; then
+            echo "No source changes to commit."
+            exit 0
+          fi
+          git commit -m "Integrate FreeRoute scanner and profile import"
+          git push origin HEAD:dev
