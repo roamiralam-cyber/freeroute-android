@@ -200,6 +200,7 @@ fun NavHost(
                 importName = newProfileArgs.importName,
                 importUrl = newProfileArgs.importUrl,
                 qrsData = newProfileArgs.qrsData,
+                localConfigJson = newProfileArgs.localConfigJson,
                 onNavigateBack = {
                     onClearNewProfileArgs()
                     navController.navigateUp()

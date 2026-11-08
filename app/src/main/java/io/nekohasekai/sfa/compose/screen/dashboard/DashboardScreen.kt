@@ -153,6 +153,13 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = bottomPadding),
         ) {
+            // FreeRoute tools are local-only and remain available while the VPN is stopped.
+            if (!isRemote) {
+                item {
+                    FreeRoutePanel(onOpenNewProfile = onOpenNewProfile)
+                }
+            }
+
             // Dynamic dashboard cards
             // Show cards when service is running OR if it's the Profiles card (always available)
             val serviceRunning = uiState.isStatusVisible

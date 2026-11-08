@@ -73,6 +73,7 @@ fun NewProfileScreen(
     importName: String? = null,
     importUrl: String? = null,
     qrsData: ByteArray? = null,
+    localConfigJson: String? = null,
     onNavigateBack: () -> Unit,
     onProfileCreated: (profileId: Long) -> Unit,
     viewModel: NewProfileViewModel = viewModel(),
@@ -80,11 +81,12 @@ fun NewProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(importName, importUrl, qrsData) {
-        if (qrsData != null) {
-            viewModel.initializeFromQRSImport(importName, qrsData)
-        } else {
-            viewModel.initializeFromQRImport(importName, importUrl)
+    LaunchedEffect(importName, importUrl, qrsData, localConfigJson) {
+        when {
+            qrsData != null -> viewModel.initializeFromQRSImport(importName, qrsData)
+            !localConfigJson.isNullOrBlank() ->
+                viewModel.initializeFromDirectConfig(importName, localConfigJson)
+            else -> viewModel.initializeFromQRImport(importName, importUrl)
         }
     }
 

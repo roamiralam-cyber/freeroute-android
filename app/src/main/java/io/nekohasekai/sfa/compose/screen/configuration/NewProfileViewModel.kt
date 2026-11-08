@@ -35,6 +35,7 @@ data class NewProfileUiState(
     val importFileName: String? = null,
     // QRS import
     val qrsData: ByteArray? = null,
+    val localConfigJson: String? = null,
     // State
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
@@ -67,9 +68,26 @@ class NewProfileViewModel(application: Application) : AndroidViewModel(applicati
                 it.copy(
                     name = name,
                     profileType = ProfileType.Remote,
+                    profileSource = ProfileSource.CreateNew,
                     remoteUrl = url,
+                    localConfigJson = null,
+                    qrsData = null,
+                    importUri = null,
                 )
             }
+        }
+    }
+
+    fun initializeFromDirectConfig(name: String?, configJson: String) {
+        _uiState.update {
+            it.copy(
+                name = name ?: "Imported configuration",
+                profileType = ProfileType.Local,
+                profileSource = ProfileSource.Import,
+                localConfigJson = configJson,
+                qrsData = null,
+                importUri = null,
+            )
         }
     }
 
@@ -80,6 +98,8 @@ class NewProfileViewModel(application: Application) : AndroidViewModel(applicati
                 profileType = ProfileType.Local,
                 profileSource = ProfileSource.Import,
                 qrsData = qrsData,
+                localConfigJson = null,
+                importUri = null,
             )
         }
     }
@@ -168,7 +188,7 @@ class NewProfileViewModel(application: Application) : AndroidViewModel(applicati
         // Validate based on profile type
         when (state.profileType) {
             ProfileType.Local -> {
-                if (state.profileSource == ProfileSource.Import && state.importUri == null && state.qrsData == null) {
+                if (state.profileSource == ProfileSource.Import && state.importUri == null && state.qrsData == null && state.localConfigJson.isNullOrBlank()) {
                     _uiState.update { it.copy(importError = context.getString(R.string.profile_input_required)) }
                     hasError = true
                 }
@@ -240,8 +260,7 @@ class NewProfileViewModel(application: Application) : AndroidViewModel(applicati
         typedProfile.path = configFile.path
 
         // Get config content
-        val configContent =
-            when (state.profileSource) {
+        val configContent = state.localConfigJson ?: when (state.profileSource) {
                 ProfileSource.CreateNew -> "{}"
                 ProfileSource.Import -> {
                     if (state.qrsData != null) {
