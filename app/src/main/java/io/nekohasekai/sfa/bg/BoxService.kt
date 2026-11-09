@@ -36,6 +36,10 @@ import io.nekohasekai.sfa.database.ProfileManager
 import io.nekohasekai.sfa.database.Settings
 import io.nekohasekai.sfa.ktx.hasPermission
 import io.nekohasekai.sfa.vendor.Vendor
+import io.nekohasekai.sfa.freeroute.FreeRouteNode
+import io.nekohasekai.sfa.freeroute.FreeRouteCatalog
+import io.nekohasekai.sfa.freeroute.FreeRouteSpeedTester
+import io.nekohasekai.sfa.freeroute.FreeRouteSpeedResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -117,6 +121,36 @@ class BoxService(private val service: Service, private val platformInterface: Pl
         val commandServer = CommandServer(this, platformInterface)
         commandServer.start()
         this.commandServer = commandServer
+    }
+   internal fun createFreeRouteProbeServer(): CommandServer {
+    val probeHandler = object : CommandServerHandler {
+        override fun serviceStop() {}
+        override fun serviceReload() {}
+
+        override fun getSystemProxyStatus(): SystemProxyStatus? = null
+
+        override fun setSystemProxyEnabled(isEnabled: Boolean) {}
+
+        override fun triggerNativeCrash() {}
+
+        override fun writeDebugMessage(message: String?) {
+            Log.d("FreeRouteProbe", message.orEmpty())
+        }
+
+        override fun connectSSHAgent(): Int = -1
+    }
+
+    return CommandServer(probeHandler, platformInterface)
+}
+
+    internal suspend fun testFreeRouteNode(
+        node: FreeRouteNode
+    ): FreeRouteSpeedResult {
+        return FreeRouteSpeedTester.test(
+            node = node,
+            configContent = FreeRouteCatalog.buildProbeConfig(node),
+            serverFactory = ::createFreeRouteProbeServer
+        )
     }
 
     private var lastProfileName = ""

@@ -130,6 +130,30 @@ object FreeRouteCatalog {
             )
             .toString(2)
     }
+    fun buildProbeConfig(node: FreeRouteNode): String {
+    val tag = "freeroute-probe"
+
+    val outbounds = JSONArray()
+        .put(buildOutbound(node, tag))
+
+    val inbound = JSONObject()
+        .put("type", "mixed")
+        .put("tag", "probe-in")
+        .put("listen", "127.0.0.1")
+        .put("listen_port", 20808)
+
+    return JSONObject()
+        .put("log", JSONObject().put("level", "error"))
+        .put("inbounds", JSONArray().put(inbound))
+        .put("outbounds", outbounds)
+        .put(
+            "route",
+            JSONObject()
+                .put("auto_detect_interface", true)
+                .put("final", tag)
+        )
+        .toString(2)
+}
 
     private fun buildOutbound(node: FreeRouteNode, tag: String): JSONObject {
         val scheme = node.protocol.lowercase()
